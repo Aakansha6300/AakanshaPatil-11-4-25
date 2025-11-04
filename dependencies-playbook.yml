@@ -1,0 +1,44 @@
+---
+- name: Setup Apache2, MySQL, and Docker on Ubuntu
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Update apt packages
+      apt:
+        update_cache: yes
+
+    - name: Install Apache2 and MySQL
+      apt:
+        name:
+          - apache2
+          - mysql-server
+        state: present
+
+    - name: Install Docker using official script
+      shell: |
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        sh get-docker.sh
+      args:
+        creates: /usr/bin/docker
+
+    - name: Enable and start Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Create directory for ephemeral storage
+      file:
+        path: /mnt/ephemeral
+        state: directory
+        mode: '0777'
+
+    - name: Pull Docker image
+      command: docker pull nginx
+
+    - name: Run Docker container with mounted storage
+      command: docker run -d --name my_container -p 8080:80 -v /mnt/ephemeral:/data nginx
+      args:
+        creates: /var
+
