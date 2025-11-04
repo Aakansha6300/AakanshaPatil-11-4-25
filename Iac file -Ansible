@@ -1,0 +1,45 @@
+---
+- name: Deploy Serverless Media Streaming App on AWS
+  hosts: localhost
+
+
+  tasks:
+    - name: Create S3 bucket for media storage
+      amazon.aws.aws_s3:
+        mode: create
+       
+
+    - name: Create DynamoDB table for user metadata
+      amazon.aws.aws_dynamodb_table
+        state: present
+
+    - name: Create IAM role for Lambda
+      amazon.aws.iam_role:
+        name: lambda_exec_role
+        state: present
+
+    - name: Attach AmazonS3FullAccess to Lambda role
+      amazon.aws.iam_policy_attachment:
+        name: lambda_s3_policy
+        
+
+    - name: Attach DynamoDB full access policy to Lambda role
+      amazon.aws.iam_policy_attachment:
+        name: lambda_dynamodb_policy
+        
+    - name: Attach CloudWatch logs policy to Lambda role
+      amazon.aws.iam_policy_attachment:
+        name: lambda_logs_policy
+      
+
+    - name: Deploy Lambda function
+      community.aws.lambda:
+        state: present
+       
+
+    - name: Create API Gateway REST API
+      community.aws.apigateway:
+        name: MediaStreamingApi
+        state: present
+     
+       
